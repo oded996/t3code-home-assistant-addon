@@ -1,0 +1,9 @@
+#!/bin/bash
+# Provider-agnostic launcher for ha-mcp inside the add-on.
+# Talks to Home Assistant Core through the Supervisor proxy using the add-on token,
+# so no secrets need to be written into provider config files.
+export HOMEASSISTANT_URL="${HOMEASSISTANT_URL:-http://supervisor/core}"
+export HOMEASSISTANT_TOKEN="${HOMEASSISTANT_TOKEN:-${SUPERVISOR_TOKEN}}"
+export HASS_URL="${HOMEASSISTANT_URL}"
+export HASS_TOKEN="${HOMEASSISTANT_TOKEN}"
+exec /usr/local/bin/ha-mcp "$@"

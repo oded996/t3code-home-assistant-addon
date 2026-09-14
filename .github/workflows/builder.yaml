@@ -1,0 +1,55 @@
+name: Build add-on
+
+on:
+  push:
+    branches: [main]
+    paths: ["t3code/**", ".github/workflows/builder.yaml"]
+  pull_request:
+    paths: ["t3code/**", ".github/workflows/builder.yaml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.arch }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64, aarch64]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read add-on version
+        id: version
+        run: echo "version=$(grep '^version:' t3code/config.yaml | awk -F'"' '{print $2}')" >> "$GITHUB_OUTPUT"
+
+      - name: Login to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build (test only)
+        if: github.event_name == 'pull_request'
+        uses: home-assistant/builder@master
+        with:
+          args: |
+            --test \
+            --${{ matrix.arch }} \
+            --target t3code \
+            --docker-hub ghcr.io/${{ github.repository_owner }}
+
+      - name: Build and push
+        if: github.event_name != 'pull_request'
+        uses: home-assistant/builder@master
+        with:
+          args: |
+            --${{ matrix.arch }} \
+            --target t3code \
+            --docker-hub ghcr.io/${{ github.repository_owner }}
