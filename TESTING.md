@@ -36,7 +36,12 @@ network from the SSH session:
 node tools/ha-ssh.mjs "curl -s http://f32addfd-t3code:8099/api/status"        # T3 Connect + provider login state
 node tools/ha-ssh.mjs "curl -s http://f32addfd-t3code:8099/api/diag"          # versions, env, files
 node tools/ha-ssh.mjs "curl -s -X POST http://f32addfd-t3code:8099/api/diag/claude"   # runs 'claude -p' inside the container (up to 2 min)
+node tools/ha-ssh.mjs "curl -s http://f32addfd-t3code:8099/api/diag/git"      # git status timing, untracked counts, active excludes
 ```
+
+Known constraint: t3 snapshots the project with `git add -A` before every turn and gives up
+after 30 seconds. If `/api/diag/git` reports tens of thousands of untracked files, turns
+fail with "Claude runtime stream failed"; the `git_exclude_patterns` option must cover them.
 
 Strip ANSI colour codes from log output with `sed 's/\x1b\[[0-9;]*m//g'`.
 
@@ -61,7 +66,10 @@ Tips:
 1. Bump `version` in `t3code/config.yaml` and add a `CHANGELOG.md` entry.
 2. Commit and push to `main`. The "Build add-on" workflow builds both arches (about 10 minutes).
    Check with `gh run list --repo oded996/t3code-home-assistant-addon --limit 3`.
-3. On the HA box: `ha store reload && ha apps update f32addfd_t3code`, then read the log.
+3. On the HA box: `node tools/ha-ssh.mjs "ha store reload && ha apps update f32addfd_t3code"`,
+   then confirm with `ha apps info f32addfd_t3code | grep version` and read the log. The
+   update takes a minute or two; the add-on restarts automatically. This step is safe to
+   delegate to a sub-agent.
 
 ## Verification checklist
 
