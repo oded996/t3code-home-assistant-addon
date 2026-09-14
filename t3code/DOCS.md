@@ -47,6 +47,7 @@ Credentials are stored in the add-on's `/data` directory and survive restarts an
 | `git_auto_exclude_large` | `true` | At start, any untracked top-level directory with 500+ files or 50+ MB is added to the managed excludes automatically (logged as a notice). Turn off if you need such a directory covered by checkpoints. |
 | `enable_ha_mcp` | `true` | Configure the `ha-mcp` Home Assistant MCP server for Claude Code, Codex, and OpenCode. |
 | `log_level` | `info` | T3 Code server log level. |
+| `debug_shell` | `false` | Development only. Exposes `POST /api/diag/exec` on the status server, which runs a shell command inside the container. Only reachable through ingress (admin users) and the internal add-on network. Leave off in normal use. |
 
 ## LAN mode
 

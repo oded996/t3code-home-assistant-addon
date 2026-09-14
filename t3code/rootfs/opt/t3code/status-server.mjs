@@ -328,6 +328,18 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(200, { "content-type": "text/plain; charset=utf-8" });
     return res.end(text);
   }
+  if (req.method === "POST" && path === "/api/diag/exec") {
+    // Development-only shell access. Enabled by the `debug_shell` option; runs as the
+    // add-on user inside the container. Reachable only via ingress / the add-on network.
+    if (process.env.T3CODE_DEBUG_SHELL !== "true") return json(res, 403, { error: "debug_shell option is off" });
+    const body = await readBody(req);
+    if (!body.cmd) return json(res, 400, { error: "Missing cmd" });
+    const r = await new Promise((resolve) => {
+      execFile("bash", ["-lc", String(body.cmd)], { env: process.env, cwd: body.cwd || "/config", timeout: Number(body.timeoutMs) || 120000, maxBuffer: 8 << 20 }, (err, stdout, stderr) =>
+        resolve({ ok: !err, code: err ? err.code : 0, signal: err ? err.signal : null, stdout: (stdout || "").slice(-60000), stderr: (stderr || "").slice(-20000) }));
+    });
+    return json(res, 200, r);
+  }
   if (req.method === "POST" && path === "/api/diag/checkpoint") {
     // Reproduce t3's checkpoint sequence with a temporary index and time each step.
     const cwd = "/config";

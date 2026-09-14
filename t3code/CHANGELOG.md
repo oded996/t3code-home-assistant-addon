@@ -1,3 +1,7 @@
+## 0.1.8
+
+- Development option `debug_shell` exposing POST /api/diag/exec (off by default).
+
 ## 0.1.7
 
 - Diagnostics: GET /api/diag/logs lists and tails T3 Code's own log files (server trace, provider logs).
