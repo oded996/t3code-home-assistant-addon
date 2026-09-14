@@ -1,3 +1,8 @@
+## 0.1.3
+
+- Status page: sign in to Claude Code and Codex on this server (headless login flows).
+- New options claude_code_oauth_token, anthropic_api_key, openai_api_key as an alternative.
+
 ## 0.1.2
 
 - Add bubblewrap for the Codex sandbox.

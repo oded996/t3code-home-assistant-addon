@@ -17,7 +17,19 @@ itself only serves a small status page for signing in to T3 Connect.
 The same instructions are printed in the add-on **Log** tab if you prefer to follow them
 from there.
 
-Once connected, log in to your providers from the T3 Code app (Settings → Providers).
+## Provider sign-in (Claude Code, Codex)
+
+Provider logins are per machine, so signing in on your laptop does not sign in the add-on.
+You have three options:
+
+1. **Status page.** The T3 Code panel has a Providers section with a Sign in button for
+   Claude Code and Codex. It shows a login link to open on any device; if the browser
+   returns a code, paste it back into the page.
+2. **Add-on options.** Set `claude_code_oauth_token` (from `claude setup-token` on a machine
+   with a browser), `anthropic_api_key`, or `openai_api_key` in the add-on configuration and
+   restart. These are passed to the CLIs as environment variables.
+3. **T3 Code app.** Settings → Providers, if the app offers sign-in for this environment.
+
 Credentials are stored in the add-on's `/data` directory and survive restarts and updates.
 
 ## Options
@@ -25,6 +37,9 @@ Credentials are stored in the add-on's `/data` directory and survive restarts an
 | Option | Default | Description |
 | --- | --- | --- |
 | `remote_mode` | `t3_connect` | `t3_connect` uses the managed relay (no ports to open). `lan` binds the server to a port for direct pairing on your network. |
+| `claude_code_oauth_token` | empty | Long-lived Claude subscription token from `claude setup-token`. |
+| `anthropic_api_key` | empty | Anthropic API key for Claude Code (API billing). |
+| `openai_api_key` | empty | OpenAI API key for Codex. |
 | `lan_port` | `3773` | Port used in `lan` mode. Also expose it under the add-on's Network section. |
 | `extra_project_dirs` | `[]` | Additional directories to register as T3 Code projects, for example `/addons/my-addon` or `/share/projects`. |
 | `git_init_config` | `false` | Run `git init` in `/config` on start if it is not a repository. T3 Code works best with git projects. |

@@ -15,6 +15,20 @@ LOG_LEVEL=$(bashio::config 'log_level' 'info')
 GIT_INIT_CONFIG=$(bashio::config 'git_init_config' 'false')
 ENABLE_HA_MCP=$(bashio::config 'enable_ha_mcp' 'true')
 
+# Optional provider credentials (alternative to signing in from the status page).
+if bashio::config.has_value claude_code_oauth_token; then
+    CLAUDE_CODE_OAUTH_TOKEN=$(bashio::config claude_code_oauth_token)
+    export CLAUDE_CODE_OAUTH_TOKEN
+fi
+if bashio::config.has_value anthropic_api_key; then
+    ANTHROPIC_API_KEY=$(bashio::config anthropic_api_key)
+    export ANTHROPIC_API_KEY
+fi
+if bashio::config.has_value openai_api_key; then
+    OPENAI_API_KEY=$(bashio::config openai_api_key)
+    export OPENAI_API_KEY
+fi
+
 export T3CODE_REMOTE_MODE="${REMOTE_MODE}"
 export T3CODE_LAN_PORT="${LAN_PORT}"
 
