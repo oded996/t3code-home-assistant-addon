@@ -1,3 +1,8 @@
+## 0.1.4
+
+- Fix sign-in links polluted by terminal hyperlink escape codes.
+- Read-only diagnostics endpoints on the status server (/api/diag, /api/diag/claude).
+
 ## 0.1.3
 
 - Status page: sign in to Claude Code and Codex on this server (headless login flows).

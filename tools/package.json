@@ -1,0 +1,9 @@
+{
+  "name": "ha-t3code-tools",
+  "private": true,
+  "type": "module",
+  "description": "Local helper scripts for testing the T3 Code add-on against a Home Assistant host",
+  "dependencies": {
+    "ssh2": "^1.16.0"
+  }
+}

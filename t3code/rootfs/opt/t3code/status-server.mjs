@@ -24,7 +24,11 @@ function run(cmd, args, timeout = 30000) {
 }
 
 function stripAnsi(s) {
-  return s.replace(/\x1b\[[0-9;?]*[A-Za-z]/g, "");
+  // CSI sequences, OSC sequences (including OSC 8 hyperlinks), and stray BEL bytes.
+  return s
+    .replace(/\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)/g, "")
+    .replace(/\x1b\[[0-9;?]*[A-Za-z]/g, "")
+    .replace(/\x07/g, "\n");
 }
 
 async function connectStatus() {
@@ -245,6 +249,31 @@ const server = http.createServer(async (req, res) => {
   }
   if (req.method === "POST" && path === "/api/restart") {
     return json(res, 200, restartServer());
+  }
+  // Read-only diagnostics for troubleshooting (only reachable via ingress / add-on network).
+  if (req.method === "GET" && path === "/api/diag") {
+    const [t3v, claudeV, codexV, node, ha] = await Promise.all([
+      run("t3", ["--version"]), run("claude", ["--version"]), run("codex", ["--version"]),
+      run("node", ["--version"]), run("ha", ["core", "info", "--raw-json"], 15000),
+    ]);
+    const home = process.env.HOME || "";
+    const ls = (p) => { try { return fs.readdirSync(p); } catch (e) { return String(e.message); } };
+    return json(res, 200, {
+      versions: { t3: t3v.stdout.trim(), claude: (claudeV.stdout + claudeV.stderr).trim(), codex: (codexV.stdout + codexV.stderr).trim(), node: node.stdout.trim() },
+      haCoreInfo: ha.stdout.slice(0, 400),
+      env: Object.fromEntries(Object.entries(process.env).filter(([k]) => /^(T3CODE_|HOME$|CLAUDE_|ANTHROPIC_|OPENAI_)/.test(k)).map(([k, v]) => [k, /TOKEN|KEY/.test(k) ? "(set)" : v])),
+      files: { home: ls(home), claudeDir: ls(home + "/.claude"), t3Home: ls(process.env.T3CODE_HOME || "") },
+    });
+  }
+  if (req.method === "POST" && path === "/api/diag/claude") {
+    const body = await readBody(req);
+    const prompt = String(body.prompt || "Reply with the single word OK.");
+    const r = await new Promise((resolve) => {
+      execFile("claude", ["-p", prompt, "--output-format", "text"], { env: process.env, cwd: "/config", timeout: 120000 }, (err, stdout, stderr) => {
+        resolve({ ok: !err, code: err ? err.code : 0, signal: err ? err.signal : null, stdout: (stdout || "").slice(-4000), stderr: (stderr || "").slice(-4000) });
+      });
+    });
+    return json(res, 200, r);
   }
   if (req.method === "GET" && (path === "/" || path === "")) {
     res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" });
