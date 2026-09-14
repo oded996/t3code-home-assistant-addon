@@ -1,4 +1,5 @@
 ARG BUILD_FROM
+# hadolint ignore=DL3006
 FROM ${BUILD_FROM}
 
 ARG BUILD_ARCH
@@ -31,6 +32,7 @@ RUN mkdir -p /etc/apt/keyrings \
 
 # T3 Code server (pinned) plus the agent CLIs it drives.
 # Provider logins are done remotely through the T3 Code UI after pairing.
+# hadolint ignore=DL3016
 RUN npm install -g --no-fund --no-audit \
         "t3@${T3_VERSION}" \
         @anthropic-ai/claude-code \

@@ -41,6 +41,7 @@ if command -v opencode >/dev/null 2>&1; then
     OC_CFG="${OC_DIR}/opencode.json"
     mkdir -p "${OC_DIR}"
     if [ ! -f "${OC_CFG}" ]; then
+        # shellcheck disable=SC2016
         echo '{"$schema":"https://opencode.ai/config.json"}' > "${OC_CFG}"
     fi
     if ! jq -e '.mcp["home-assistant"]' "${OC_CFG}" >/dev/null 2>&1; then
