@@ -1,3 +1,8 @@
+## 0.1.6
+
+- Auto-exclude large untracked top-level directories (500+ files or 50+ MB) from T3 Code checkpoints (`git_auto_exclude_large`).
+- Diagnostics: POST /api/diag/checkpoint times the exact checkpoint git sequence inside the container.
+
 ## 0.1.5
 
 - Fix turns failing with "Claude runtime stream failed": T3 Code snapshots /config with git add -A before each turn and timed out on large untracked HA data. New `git_exclude_patterns` option writes excludes to .git/info/exclude.

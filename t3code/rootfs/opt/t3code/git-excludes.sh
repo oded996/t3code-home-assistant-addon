@@ -31,6 +31,29 @@ apply_excludes() {
 
     local patterns
     patterns=$(collect_patterns)
+
+    # Auto-exclude large untracked top-level directories. T3 Code hashes every
+    # untracked file on each turn and aborts after 30s, so big data dirs
+    # (camera clips, node_modules, nested repos) must not be part of the snapshot.
+    if [ "$(bashio::config 'git_auto_exclude_large' 'true')" = "true" ]; then
+        local auto=""
+        local dir count size
+        # Apply the static patterns first so counts reflect what would remain.
+        { echo "${BEGIN_MARK}"; echo "${patterns}"; echo "${END_MARK}"; } | cat "${tmp}" - > "${exclude_file}"
+        while read -r count dir; do
+            [ -n "${dir}" ] || continue
+            [ -d "${repo}/${dir}" ] || continue
+            size=$(du -sm "${repo}/${dir}" 2>/dev/null | cut -f1)
+            if [ "${count}" -ge 500 ] || [ "${size:-0}" -ge 50 ]; then
+                bashio::log.notice "git excludes: auto-excluding untracked '${dir}/' (${count} files, ${size:-?} MB) from T3 Code checkpoints"
+                auto="${auto}${dir}/"$'\n'
+            fi
+        done < <(git -C "${repo}" ls-files -o --exclude-standard 2>/dev/null | grep '/' | cut -d/ -f1 | sort | uniq -c | awk '{print $1, $2}')
+        if [ -n "${auto}" ]; then
+            patterns="${patterns}"$'\n'"# auto-excluded large untracked directories"$'\n'"${auto%$'\n'}"
+        fi
+    fi
+
     if [ -n "${patterns}" ]; then
         {
             echo "${BEGIN_MARK}"

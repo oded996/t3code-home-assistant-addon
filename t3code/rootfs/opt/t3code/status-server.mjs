@@ -284,6 +284,29 @@ const server = http.createServer(async (req, res) => {
       untrackedByTopDir: top, exclude, error: status.ok ? null : status.stderr.trim(),
     });
   }
+  if (req.method === "POST" && path === "/api/diag/checkpoint") {
+    // Reproduce t3's checkpoint sequence with a temporary index and time each step.
+    const cwd = "/config";
+    const idx = `/tmp/t3-diag-index-${process.pid}`;
+    const env = { ...process.env, GIT_INDEX_FILE: idx };
+    const step = async (args) => {
+      const t = Date.now();
+      const r = await new Promise((resolve) => execFile("git", args, { cwd, env, timeout: 180000, maxBuffer: 8 << 20 }, (err, stdout, stderr) =>
+        resolve({ ok: !err, ms: Date.now() - t, out: (stdout || "").trim().slice(0, 300), err: (stderr || "").trim().slice(0, 500) })));
+      return r;
+    };
+    try { fs.rmSync(idx, { force: true }); } catch {}
+    const result = {
+      readTree: await step(["read-tree", "HEAD"]),
+      add: await step(["add", "-A", "--", "."]),
+      writeTree: await step(["write-tree"]),
+      countObjects: await step(["count-objects", "-vH"]),
+    };
+    try { fs.rmSync(idx, { force: true }); } catch {}
+    const cfg = await run("git", ["-C", cwd, "config", "--list", "--show-origin"]);
+    result.gitConfig = cfg.stdout.split("\n").filter((l) => /fsmonitor|untracked|safe|core\.|index\./i.test(l)).slice(0, 40);
+    return json(res, 200, result);
+  }
   if (req.method === "POST" && path === "/api/diag/claude") {
     const body = await readBody(req);
     const prompt = String(body.prompt || "Reply with the single word OK.");
