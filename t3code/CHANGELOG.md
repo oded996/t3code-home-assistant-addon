@@ -1,3 +1,7 @@
+## 0.1.7
+
+- Diagnostics: GET /api/diag/logs lists and tails T3 Code's own log files (server trace, provider logs).
+
 ## 0.1.6
 
 - Auto-exclude large untracked top-level directories (500+ files or 50+ MB) from T3 Code checkpoints (`git_auto_exclude_large`).

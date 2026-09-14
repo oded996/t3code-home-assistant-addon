@@ -284,6 +284,50 @@ const server = http.createServer(async (req, res) => {
       untrackedByTopDir: top, exclude, error: status.ok ? null : status.stderr.trim(),
     });
   }
+  if (req.method === "GET" && path === "/api/diag/logs") {
+    // List t3's own log files, or tail one: ?file=<relative path>&bytes=<n>&grep=<regex>
+    const pathMod = await import("node:path");
+    const logsDir = pathMod.join(process.env.T3CODE_HOME || "/data/t3code", "userdata", "logs");
+    const file = url.searchParams.get("file");
+    if (!file) {
+      const out = [];
+      const walk = (dir, rel) => {
+        let entries = [];
+        try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
+        for (const e of entries) {
+          const p = pathMod.join(dir, e.name);
+          const r = rel ? rel + "/" + e.name : e.name;
+          if (e.isDirectory()) walk(p, r);
+          else { const st = fs.statSync(p); out.push({ file: r, size: st.size, mtime: st.mtime.toISOString() }); }
+        }
+      };
+      walk(logsDir, "");
+      out.sort((a, b) => (a.mtime < b.mtime ? 1 : -1));
+      return json(res, 200, { logsDir, files: out.slice(0, 200) });
+    }
+    const target = pathMod.resolve(logsDir, file);
+    if (!target.startsWith(logsDir + pathMod.sep) && target !== logsDir) return json(res, 400, { error: "path outside logs dir" });
+    let text = "";
+    try {
+      const bytes = Math.min(Number(url.searchParams.get("bytes") || 200000), 2000000);
+      const st = fs.statSync(target);
+      const fd = fs.openSync(target, "r");
+      const start = Math.max(0, st.size - bytes);
+      const buf = Buffer.alloc(st.size - start);
+      fs.readSync(fd, buf, 0, buf.length, start);
+      fs.closeSync(fd);
+      text = buf.toString("utf8");
+    } catch (e) {
+      return json(res, 404, { error: String(e.message) });
+    }
+    const grep = url.searchParams.get("grep");
+    if (grep) {
+      const re = new RegExp(grep, "i");
+      text = text.split("\n").filter((l) => re.test(l)).join("\n");
+    }
+    res.writeHead(200, { "content-type": "text/plain; charset=utf-8" });
+    return res.end(text);
+  }
   if (req.method === "POST" && path === "/api/diag/checkpoint") {
     // Reproduce t3's checkpoint sequence with a temporary index and time each step.
     const cwd = "/config";
