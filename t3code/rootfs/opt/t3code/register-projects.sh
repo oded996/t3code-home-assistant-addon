@@ -1,4 +1,5 @@
 #!/usr/bin/with-contenv bashio
+set +o errexit +o nounset
 # Register /config and any configured extra directories as T3 Code projects.
 # Runs before the server starts (t3 project add writes the same SQLite DB).
 

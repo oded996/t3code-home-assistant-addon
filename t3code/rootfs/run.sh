@@ -1,5 +1,7 @@
 #!/usr/bin/with-contenv bashio
 # T3 Code add-on entrypoint.
+# bashio enables errexit/nounset; we manage failures ourselves.
+set +o errexit +o nounset
 set -o pipefail
 
 export HOME=/data/home
@@ -13,11 +15,17 @@ LOG_LEVEL=$(bashio::config 'log_level' 'info')
 GIT_INIT_CONFIG=$(bashio::config 'git_init_config' 'false')
 ENABLE_HA_MCP=$(bashio::config 'enable_ha_mcp' 'true')
 
-export T3CODE_LOG_LEVEL="${LOG_LEVEL}"
 export T3CODE_REMOTE_MODE="${REMOTE_MODE}"
 export T3CODE_LAN_PORT="${LAN_PORT}"
 
 bashio::log.info "T3 Code add-on starting (t3 $(t3 --version 2>/dev/null || echo unknown), mode: ${REMOTE_MODE})"
+for cli in claude codex opencode cloudflared ha ha-mcp; do
+    if command -v "${cli}" >/dev/null 2>&1; then
+        bashio::log.info "  found ${cli}: $(command -v "${cli}")"
+    else
+        bashio::log.warning "  missing ${cli}"
+    fi
+done
 
 # ---------------------------------------------------------------------------
 # Persistent state
@@ -58,7 +66,7 @@ STATUS_PID=$!
 # T3 Code server
 # ---------------------------------------------------------------------------
 if [ "${REMOTE_MODE}" = "t3_connect" ]; then
-    if t3 connect status --json 2>/dev/null | jq -e '.authenticated and .desired' >/dev/null; then
+    if t3 connect status --json 2>/dev/null | sed -n '/^{/,$p' | jq -e '.authenticated and .desired' >/dev/null; then
         bashio::log.info "T3 Connect is authorized; the server will link on startup."
     else
         bashio::log.notice "T3 Connect is NOT set up yet."

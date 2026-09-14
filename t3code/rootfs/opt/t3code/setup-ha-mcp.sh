@@ -1,4 +1,5 @@
 #!/usr/bin/with-contenv bashio
+set +o errexit +o nounset
 # Configure the Home Assistant MCP server (ha-mcp) for every installed provider.
 # The launcher /usr/local/bin/ha-mcp-server injects the Supervisor token, so no
 # secrets are written into provider config files.

@@ -24,11 +24,16 @@ function t3(args) {
 
 async function connectStatus() {
   const r = await t3(["connect", "status", "--json"]);
-  try {
-    return JSON.parse(r.stdout.trim());
-  } catch {
-    return { error: (r.stderr || r.stdout).trim() || "t3 connect status failed" };
+  const raw = r.stdout + r.stderr;
+  const start = raw.indexOf("{");
+  const end = raw.lastIndexOf("}");
+  if (start >= 0 && end > start) {
+    try {
+      return JSON.parse(raw.slice(start, end + 1));
+    } catch {}
   }
+  console.log("[status] could not parse t3 connect status output:\n" + raw);
+  return { error: raw.trim() || "t3 connect status failed" };
 }
 
 // ---- headless link session ------------------------------------------------
