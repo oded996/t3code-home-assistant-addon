@@ -13,7 +13,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates curl gnupg git jq nano vim-tiny less procps \
-        util-linux bsdutils openssh-client \
+        util-linux bsdutils openssh-client bubblewrap \
         python3 python3-pip python3-venv \
         build-essential pkg-config \
     && rm -rf /var/lib/apt/lists/*

@@ -11,9 +11,9 @@ add_project() {
     fi
     local out
     if out=$(t3 project add --title "${title}" "${path}" 2>&1); then
-        bashio::log.info "Registered project: ${path}"
+        bashio::log.info "Registered project: ${path} (${out})"
     elif echo "${out}" | grep -qiE 'already|exists|duplicate'; then
-        bashio::log.debug "Project already registered: ${path}"
+        bashio::log.info "Project already registered: ${path}"
     else
         bashio::log.warning "Could not register ${path}: ${out}"
     fi
