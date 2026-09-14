@@ -1,7 +1,7 @@
 ---
 name: "T3 Code"
 description: "Headless T3 Code server for remote-controlled AI coding agents (Claude Code, Codex, OpenCode) with Home Assistant MCP"
-version: "0.1.4"
+version: "0.1.5"
 slug: "t3code"
 url: "https://github.com/oded996/t3code-home-assistant-addon"
 image: "ghcr.io/oded996/t3code-{arch}"
@@ -35,6 +35,25 @@ options:
   lan_port: 3773
   extra_project_dirs: []
   git_init_config: false
+  git_exclude_patterns:
+    - ".storage/"
+    - ".cache/"
+    - ".cloud/"
+    - "deps/"
+    - "tts/"
+    - "image/"
+    - "backups/"
+    - "custom_components/"
+    - "www/community/"
+    - "__pycache__/"
+    - "*.pyc"
+    - "*.db"
+    - "*.db-shm"
+    - "*.db-wal"
+    - "*.db-journal"
+    - "*.log"
+    - "*.log.*"
+    - "home-assistant_v2.db*"
   enable_ha_mcp: true
   log_level: "info"
 schema:
@@ -46,6 +65,8 @@ schema:
   extra_project_dirs:
     - str
   git_init_config: bool
+  git_exclude_patterns:
+    - str
   enable_ha_mcp: bool
   log_level: "list(trace|debug|info|warn|error)"
 

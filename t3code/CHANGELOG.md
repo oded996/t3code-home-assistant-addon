@@ -1,3 +1,8 @@
+## 0.1.5
+
+- Fix turns failing with "Claude runtime stream failed": T3 Code snapshots /config with git add -A before each turn and timed out on large untracked HA data. New `git_exclude_patterns` option writes excludes to .git/info/exclude.
+- Diagnostics: /api/diag/git reports git status timing and untracked counts.
+
 ## 0.1.4
 
 - Fix sign-in links polluted by terminal hyperlink escape codes.

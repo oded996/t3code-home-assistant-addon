@@ -56,6 +56,11 @@ if [ "${GIT_INIT_CONFIG}" = "true" ] && [ ! -d /config/.git ]; then
     git -C /config init -q
 fi
 
+# T3 Code snapshots the whole working tree (git add -A) before every turn. Large
+# untracked Home Assistant data (databases, caches, HACS components) makes that
+# time out, so write exclude patterns to the repo-local .git/info/exclude.
+/opt/t3code/git-excludes.sh || bashio::log.warning "git exclude setup had errors (continuing)"
+
 # ---------------------------------------------------------------------------
 # Projects
 # ---------------------------------------------------------------------------

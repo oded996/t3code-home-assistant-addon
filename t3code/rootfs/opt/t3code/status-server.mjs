@@ -265,6 +265,25 @@ const server = http.createServer(async (req, res) => {
       files: { home: ls(home), claudeDir: ls(home + "/.claude"), t3Home: ls(process.env.T3CODE_HOME || "") },
     });
   }
+  if (req.method === "GET" && path === "/api/diag/git") {
+    const t0 = Date.now();
+    const status = await run("git", ["-C", "/config", "status", "--porcelain", "--untracked-files=all"], 120000);
+    const t1 = Date.now();
+    const lines = status.stdout.split("\n").filter(Boolean);
+    const untracked = lines.filter((l) => l.startsWith("??"));
+    const byTop = {};
+    for (const l of untracked) {
+      const top = l.slice(3).split("/")[0];
+      byTop[top] = (byTop[top] || 0) + 1;
+    }
+    const top = Object.entries(byTop).sort((a, b) => b[1] - a[1]).slice(0, 15);
+    let exclude = "";
+    try { exclude = fs.readFileSync("/config/.git/info/exclude", "utf8"); } catch {}
+    return json(res, 200, {
+      isRepo: status.ok, statusMs: t1 - t0, changed: lines.length - untracked.length, untracked: untracked.length,
+      untrackedByTopDir: top, exclude, error: status.ok ? null : status.stderr.trim(),
+    });
+  }
   if (req.method === "POST" && path === "/api/diag/claude") {
     const body = await readBody(req);
     const prompt = String(body.prompt || "Reply with the single word OK.");
